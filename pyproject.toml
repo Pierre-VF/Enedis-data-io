@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "enedis-data-io"
+version = "0.1.0"
+description = ""
+authors = ["Pierre V-F <pierre@pierrevf.consulting>"]
+license = "MIT"
+readme = "README.md"
+packages = [
+    {include = "enedis_data_io"},
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pycryptodome = "^3.20.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
