@@ -1,17 +1,18 @@
 """
 Interface vers les fonctionnalités essentielles en Français
+
+(Documentation à réaliser)
 """
 
 import pandas as pd
 from enedis_data_io.src.api.entreprises import ApiManager as _ApiManager
 from enedis_data_io.src.api.entreprises import MeterAddress as AdresseCompteur
+from enedis_data_io.src.file_decryption import decrypt_file as __decrypt_file
 
 
 class ApiEntreprises:
     """
     Classe d'interface vers les fonctionalités entreprise
-
-    (Documentation à réaliser)
     """
     def __init__(self, client_id: str, client_secret: str) -> None:
         self.__api_manager = _ApiManager(client_id=client_id, client_secret=client_secret)
@@ -30,6 +31,10 @@ class ApiEntreprises:
     
     def production_par_demi_heure(self, prm: str, start: str, end: str)
         return self.__api_manager.half_hourly_production(prm=prm, start=start, end=end)
+
+
+def decrypte_fichier(fichier_encrypte: str, cle: str, fichier_decrypte: str) -> str:
+    return __decrypt_file(file_path=fichier_encrypte, key=cle, output_file=fichier_decrypte)
 
 
 __all__ = [ApiEntreprises, AdresseCompteur]

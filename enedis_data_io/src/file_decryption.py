@@ -6,6 +6,13 @@ from Crypto.Cipher import AES
 
 
 def decrypt_file(file_path: str, key: str, output_file: str) -> str:
+    """Method to decrypt a file encrypted by Enedis prior to exporting
+
+    :param file_path: file path
+    :param key: encryption key
+    :param output_file: decrypted file path
+    :return: address of decrypted file (copy of output_file for convenience)
+    """
     with open(file_path, "rb") as f:
         file_content = f.read()
 
