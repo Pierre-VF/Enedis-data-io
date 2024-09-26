@@ -20,19 +20,44 @@ Le package s'installe en une ligne:
 
 Un certain nombre de fonctionalités de l'API entreprise sont déjà implémentées.
 
+Deux interfaces sont disponibles: une anglophone et une francophone.
+
+Interface anglophone:
 ```python
-from enedis_data_io.src.api.entreprises import ApiManager
+from enedis_data_io.en import ApiCompanies
 
-api_io = ApiManager(client_id=client_id, client_secret=client_secret)
+api_io = ApiCompanies(client_id=client_id, client_secret=client_secret)
 
+# Vue d'ensemble des PRM disponibles
 api_io.meters()
 
+# Données de contexte par PRM
 api_io.meter_address(prm: str)
 
 # Production et consommation avec sortie au format Pandas DataFrame
 api_io.daily_consumption(prm: str, start: str, end: str)
 api_io.daily_production(prm: str, start: str, end: str)
 api_io.half_hourly_production(prm: str, start: str, end: str)
+
+```
+
+Interface francophone:
+```python
+from enedis_data_io.fr import ApiEntreprises
+
+api_io = ApiEntreprises(client_id=client_id, client_secret=client_secret)
+
+# Vue d'ensemble des PRM disponibles
+api_io.compteurs()
+
+# Données de contexte par PRM
+api_io.adresse_du_compteur(prm: str)
+
+# Production et consommation avec sortie au format Pandas DataFrame
+api_io.consommation_journaliere(prm: str, start: str, end: str)
+api_io.production_journaliere(prm: str, start: str, end: str)
+api_io.production_par_demi_heure(prm: str, start: str, end: str)
+
 
 ```
 
