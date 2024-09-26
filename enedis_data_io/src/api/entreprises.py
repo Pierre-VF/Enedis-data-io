@@ -18,7 +18,7 @@ from datetime import date, datetime, timedelta
 import pandas as pd
 from requests import Session
 
-from enedis_data_io.src.typing_helpers import DATE_INPUT
+from enedis_data_io.src.types_helpers import DATE_INPUT
 
 SESSION = Session()
 
@@ -232,7 +232,7 @@ class ApiManager:
             self.__token_expiry and self.__token_expiry >= datetime.now()
         ):
             # Refresh the token if it's either now available or expiring
-            self.__token = fetch_token(
+            self.__token, self.__token_expiry = fetch_token(
                 client_id=self.__client_id, client_secret=self.__client_secret
             )
         return self.__token
