@@ -210,6 +210,16 @@ def fetch_half_hourly_production(
     r.raise_for_status()
     x = r.json()
     df = pd.DataFrame(x["meter_reading"]["interval_reading"])
+
+    if df.empty:
+        raise RuntimeError("No data available in period")
+    first_value = df["value"][0]
+    if isinstance(first_value, list):
+        # For 3 phase management
+        df["date"] = df["date"].apply(lambda x: x[0])
+        df["value"] = df["value"].apply(
+            lambda x: float(x[0]) + float(x[1]) + float(x[2])
+        )
     df["t"] = pd.to_datetime(df["date"], utc=False)
     out = df[["value", "t"]].set_index("t").rename(columns={"value": "production_wh"})
     out = out.tz_localize(TIMEZONE)
