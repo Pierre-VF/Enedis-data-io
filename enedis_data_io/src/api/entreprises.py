@@ -16,11 +16,9 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
 import pandas as pd
-from requests import Session
 
+from enedis_data_io.src.api import SESSION
 from enedis_data_io.src.types_helpers import DATE_INPUT
-
-SESSION = Session()
 
 BASE_URL = "https://ext.prod.api.enedis.fr:443"
 TIMEZONE = "Europe/Paris"
