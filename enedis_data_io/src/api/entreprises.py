@@ -1,6 +1,8 @@
 """
 Module pour lire les données depuis l'API de Enedis pour les entreprises
 
+Pour la simplicité d'usage, il est recommandé d'utiliser l'interface objet via la classe **ApiManager**
+
 Lien vers les API:
 > https://mon-compte-entreprise.enedis.fr/vos-donnees-energetiques/vos-api
 
@@ -25,12 +27,12 @@ TIMEZONE = "Europe/Paris"
 def fetch_token(
     client_id: str | None = None,
     client_secret: str | None = None,
-) -> str:
+) -> tuple[str, datetime]:
     """Methode pour obtenir un token
 
     :param client_id: _description_, defaults to None
     :param client_secret: _description_, defaults to None
-    :return: _description_
+    :return: Token pour l'API, datetime d'expiration du token
     """
     # La documentation de l'API était éronnée - la structure qui fonctionne vient d'ici:
     # > https://github.com/bokub/conso-api/blob/master/lib/token.ts
@@ -47,7 +49,9 @@ def fetch_token(
     )
     r.raise_for_status()
     token = r.json()
-    return token["access_token"]
+    return token["access_token"], datetime.now() + timedelta(
+        seconds=token["expires_in"]
+    )
 
 
 @dataclass
@@ -57,7 +61,7 @@ class MeterAddress:
     insee_code: str
 
 
-def meter_address(token: str, prm: str) -> MeterAddress:
+def fetch_meter_address(token: str, prm: str) -> MeterAddress:
     """Télécharge l'addresse correspondant à un PRM
 
     :param token: token de l'API
@@ -77,7 +81,7 @@ def meter_address(token: str, prm: str) -> MeterAddress:
     return MeterAddress(**x)
 
 
-def meter_overview(token: str) -> list[str]:
+def fetch_meter_overview(token: str) -> list[str]:
     """Télécharge la liste des PRMs disponibles
 
     :param token: token de l'API
@@ -104,7 +108,7 @@ def meter_overview(token: str) -> list[str]:
     return out
 
 
-def daily_production(token: str, prm: str, start: str, end: str) -> pd.DataFrame:
+def fetch_daily_production(token: str, prm: str, start: str, end: str) -> pd.DataFrame:
     """
     Télécharge les données de production journalière (en Wh) sur une période donnée.
 
@@ -128,7 +132,7 @@ def daily_production(token: str, prm: str, start: str, end: str) -> pd.DataFrame
     return out
 
 
-def daily_consumption(token: str, prm: str, start: str, end: str) -> pd.DataFrame:
+def fetch_daily_consumption(token: str, prm: str, start: str, end: str) -> pd.DataFrame:
     """
     Télécharge les données de consommation journalière (en Wh) sur une période donnée.
 
@@ -152,7 +156,9 @@ def daily_consumption(token: str, prm: str, start: str, end: str) -> pd.DataFram
     return out
 
 
-def half_hourly_production(token: str, prm: str, start: str, end: str) -> pd.DataFrame:
+def fetch_half_hourly_production(
+    token: str, prm: str, start: str, end: str
+) -> pd.DataFrame:
     """
     Télécharge les données de production à la demi-heure (en Wh) sur une période donnée.
 
@@ -179,3 +185,42 @@ def half_hourly_production(token: str, prm: str, start: str, end: str) -> pd.Dat
     out = df[["value", "t"]].set_index("t").rename(columns={"value": "production_wh"})
     out = out.tz_localize(TIMEZONE)
     return out
+
+
+# Object-oriented interface to facilitate the work
+
+
+class ApiManager:
+    def __init__(self, client_id: str, client_secret: str) -> None:
+        self.__client_id = client_id
+        self.__client_secret = client_secret
+        self.__token: str | None = None
+        self.__token_expiry: str | None = None
+
+    @property
+    def token(self) -> str:
+        if (self.__token is None) or (
+            self.__token_expiry and self.__token_expiry >= datetime.now()
+        ):
+            # Refresh the token if it's either now available or expiring
+            self.__token = fetch_token(
+                client_id=self.__client_id, client_secret=self.__client_secret
+            )
+        return self.__token
+
+    def meters(self) -> list[str]:
+        return fetch_meter_overview(self.token)
+
+    def meter_address(self, prm: str) -> MeterAddress:
+        return fetch_meter_address(self.token, prm=prm)
+
+    def daily_consumption(self, prm: str, start: str, end: str) -> pd.DataFrame:
+        return fetch_daily_consumption(token=self.token, prm=prm, start=start, end=end)
+
+    def daily_production(self, prm: str, start: str, end: str) -> pd.DataFrame:
+        return fetch_daily_production(token=self.token, prm=prm, start=start, end=end)
+
+    def half_hourly_production(self, prm: str, start: str, end: str) -> pd.DataFrame:
+        return fetch_half_hourly_production(
+            token=self.token, prm=prm, start=start, end=end
+        )
