@@ -4,10 +4,14 @@ Module pour lire les données depuis l'API de Enedis pour les entreprises
 Lien vers les API:
 > https://mon-compte-entreprise.enedis.fr/vos-donnees-energetiques/vos-api
 
+Lien vers l'état des services:
+> https://datahub-enedis.fr/services-api/etat-des-services/
+
 Note: l'authentification est activée par défaut (d'où la visualisation en lecture seule)
 """
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 import pandas as pd
 from requests import Session
@@ -144,5 +148,34 @@ def daily_consumption(token: str, prm: str, start: str, end: str) -> pd.DataFram
     df = pd.DataFrame(x["meter_reading"]["interval_reading"])
     df["t"] = pd.to_datetime(df["date"], utc=False)
     out = df[["value", "t"]].set_index("t").rename(columns={"value": "consumption_wh"})
+    out = out.tz_localize(TIMEZONE)
+    return out
+
+
+def half_hourly_production(token: str, prm: str, start: str, end: str) -> pd.DataFrame:
+    """
+    Télécharge les données de production à la demi-heure (en Wh) sur une période donnée.
+
+    :param token: token pour la requête API
+    :param prm: numéro de livraison (PRM)
+    :param start: début de la période (au maximum de 24 mois en arrière)
+    :param end: fin (exclue) de la période (au minimum 15 jours en arrière)
+        Note: le début et la fin doivent être séparés de moins de 7 jours
+    :return: production journalière au format pandas.DataFrame(production_wh)
+    """
+    t_start = datetime.fromisoformat(start)
+    t_end = datetime.fromisoformat(end)
+    if t_end > t_start + timedelta(days=7):
+        raise ValueError("There must be less than 7 days between start and end")
+    r = SESSION.get(
+        url=f"{BASE_URL}/mesures/v1/metering_data/production_load_curve",
+        params=dict(usage_point_id=prm, start=start, end=end),
+        headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
+    )
+    r.raise_for_status()
+    x = r.json()
+    df = pd.DataFrame(x["meter_reading"]["interval_reading"])
+    df["t"] = pd.to_datetime(df["date"], utc=False)
+    out = df[["value", "t"]].set_index("t").rename(columns={"value": "production_wh"})
     out = out.tz_localize(TIMEZONE)
     return out
