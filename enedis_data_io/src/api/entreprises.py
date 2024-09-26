@@ -13,10 +13,12 @@ Note: l'authentification est activée par défaut (d'où la visualisation en lec
 """
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 import pandas as pd
 from requests import Session
+
+from enedis_data_io.src.typing_helpers import DATE_INPUT
 
 SESSION = Session()
 
@@ -108,7 +110,29 @@ def fetch_meter_overview(token: str) -> list[str]:
     return out
 
 
-def fetch_daily_production(token: str, prm: str, start: str, end: str) -> pd.DataFrame:
+def _f_date(x: DATE_INPUT) -> date:
+    if isinstance(x, str):
+        return date.fromisoformat(x)
+    elif isinstance(x, date):
+        return x
+    elif isinstance(x, datetime):
+        return x.date
+    else:
+        raise TypeError()
+
+
+def _parse_start_end_as_dates(start: DATE_INPUT, end: DATE_INPUT) -> tuple[date, date]:
+    return _f_date(start), _f_date(end)
+
+
+def _parse_start_end_as_str(start: DATE_INPUT, end: DATE_INPUT) -> tuple[str, str]:
+    x1, x2 = _parse_start_end_as_dates(start, end)
+    return str(x1), str(x2)
+
+
+def fetch_daily_production(
+    token: str, prm: str, start: DATE_INPUT, end: DATE_INPUT
+) -> pd.DataFrame:
     """
     Télécharge les données de production journalière (en Wh) sur une période donnée.
 
@@ -118,6 +142,7 @@ def fetch_daily_production(token: str, prm: str, start: str, end: str) -> pd.Dat
     :param end: fin (exclue) de la période (au minimum 15 jours en arrière)
     :return: production journalière au format pandas.DataFrame(production_wh)
     """
+    start, end = _parse_start_end_as_str(start, end)
     r = SESSION.get(
         url=f"{BASE_URL}/mesures/v1/metering_data/daily_production",
         params=dict(usage_point_id=prm, start=start, end=end),
@@ -132,7 +157,9 @@ def fetch_daily_production(token: str, prm: str, start: str, end: str) -> pd.Dat
     return out
 
 
-def fetch_daily_consumption(token: str, prm: str, start: str, end: str) -> pd.DataFrame:
+def fetch_daily_consumption(
+    token: str, prm: str, start: DATE_INPUT, end: DATE_INPUT
+) -> pd.DataFrame:
     """
     Télécharge les données de consommation journalière (en Wh) sur une période donnée.
 
@@ -142,6 +169,7 @@ def fetch_daily_consumption(token: str, prm: str, start: str, end: str) -> pd.Da
     :param end: fin (exclue) de la période (au minimum 15 jours en arrière)
     :return: consommation journalière au format pandas.DataFrame(production_wh)
     """
+    start, end = _parse_start_end_as_str(start, end)
     r = SESSION.get(
         url=f"{BASE_URL}/mesures/v1/metering_data/daily_consumption",
         params=dict(usage_point_id=prm, start=start, end=end),
@@ -157,7 +185,7 @@ def fetch_daily_consumption(token: str, prm: str, start: str, end: str) -> pd.Da
 
 
 def fetch_half_hourly_production(
-    token: str, prm: str, start: str, end: str
+    token: str, prm: str, start: DATE_INPUT, end: DATE_INPUT
 ) -> pd.DataFrame:
     """
     Télécharge les données de production à la demi-heure (en Wh) sur une période donnée.
@@ -169,6 +197,7 @@ def fetch_half_hourly_production(
         Note: le début et la fin doivent être séparés de moins de 7 jours
     :return: production journalière au format pandas.DataFrame(production_wh)
     """
+    start, end = _parse_start_end_as_str(start, end)
     t_start = datetime.fromisoformat(start)
     t_end = datetime.fromisoformat(end)
     if t_end > t_start + timedelta(days=7):
@@ -214,13 +243,19 @@ class ApiManager:
     def meter_address(self, prm: str) -> MeterAddress:
         return fetch_meter_address(self.token, prm=prm)
 
-    def daily_consumption(self, prm: str, start: str, end: str) -> pd.DataFrame:
+    def daily_consumption(
+        self, prm: str, start: DATE_INPUT, end: DATE_INPUT
+    ) -> pd.DataFrame:
         return fetch_daily_consumption(token=self.token, prm=prm, start=start, end=end)
 
-    def daily_production(self, prm: str, start: str, end: str) -> pd.DataFrame:
+    def daily_production(
+        self, prm: str, start: DATE_INPUT, end: DATE_INPUT
+    ) -> pd.DataFrame:
         return fetch_daily_production(token=self.token, prm=prm, start=start, end=end)
 
-    def half_hourly_production(self, prm: str, start: str, end: str) -> pd.DataFrame:
+    def half_hourly_production(
+        self, prm: str, start: DATE_INPUT, end: DATE_INPUT
+    ) -> pd.DataFrame:
         return fetch_half_hourly_production(
             token=self.token, prm=prm, start=start, end=end
         )
