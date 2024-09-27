@@ -17,7 +17,7 @@ from datetime import date, datetime, timedelta
 
 import pandas as pd
 
-from enedis_data_io.src.api import SESSION
+from enedis_data_io.src.api import WEB_SESSION
 from enedis_data_io.src.types_helpers import DATE_INPUT
 
 BASE_URL = "https://ext.prod.api.enedis.fr:443"
@@ -36,7 +36,7 @@ def fetch_token(
     """
     # La documentation de l'API était éronnée - la structure qui fonctionne vient d'ici:
     # > https://github.com/bokub/conso-api/blob/master/lib/token.ts
-    r = SESSION.post(
+    r = WEB_SESSION.post(
         f"{BASE_URL}/oauth2/v3/token",
         headers={
             "Content-Type": "application/x-www-form-urlencoded",
@@ -68,7 +68,7 @@ def fetch_meter_address(token: str, prm: str) -> MeterAddress:
     :param prm: PRM du compteur
     :return: _description_
     """
-    r = SESSION.get(
+    r = WEB_SESSION.get(
         url=f"{BASE_URL}/address/v1/{prm}",
         headers={
             "Authorization": f"Bearer {token}",
@@ -88,7 +88,7 @@ def fetch_meter_overview(token: str) -> list[str]:
     :raises NotImplementedError: (pour l'instant, un grand nombre de compteur n'est pas supporté - si trop de pages sont disponibles, cette erreur est retournée)
     :return: liste des PRM sous format str
     """
-    r = SESSION.post(
+    r = WEB_SESSION.post(
         url=f"{BASE_URL}/usage_point_id_perimeter/v1/usage_point_id",
         data='{"page_number": 1}',
         headers={
@@ -141,7 +141,7 @@ def fetch_daily_production(
     :return: production journalière au format pandas.DataFrame(production_wh)
     """
     start, end = _parse_start_end_as_str(start, end)
-    r = SESSION.get(
+    r = WEB_SESSION.get(
         url=f"{BASE_URL}/mesures/v1/metering_data/daily_production",
         params=dict(usage_point_id=prm, start=start, end=end),
         headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
@@ -168,7 +168,7 @@ def fetch_daily_consumption(
     :return: consommation journalière au format pandas.DataFrame(production_wh)
     """
     start, end = _parse_start_end_as_str(start, end)
-    r = SESSION.get(
+    r = WEB_SESSION.get(
         url=f"{BASE_URL}/mesures/v1/metering_data/daily_consumption",
         params=dict(usage_point_id=prm, start=start, end=end),
         headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
@@ -200,7 +200,7 @@ def fetch_half_hourly_production(
     t_end = datetime.fromisoformat(end)
     if t_end > t_start + timedelta(days=7):
         raise ValueError("There must be less than 7 days between start and end")
-    r = SESSION.get(
+    r = WEB_SESSION.get(
         url=f"{BASE_URL}/mesures/v1/metering_data/production_load_curve",
         params=dict(usage_point_id=prm, start=start, end=end),
         headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
