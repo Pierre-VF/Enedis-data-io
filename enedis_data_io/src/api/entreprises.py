@@ -78,7 +78,11 @@ def fetch_meter_address(token: str, prm: str) -> MeterAddress:
     )
     r.raise_for_status()
     x = r.json().get("address")
-    return MeterAddress(**x)
+    return MeterAddress(
+        number_street_name=x.get("number_street_name"),
+        insee_code=x.get("insee_code"),
+        postal_code_city=x.get("postal_code_city"),
+    )
 
 
 def fetch_meter_overview(token: str) -> list[str]:
