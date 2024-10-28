@@ -224,7 +224,7 @@ def fetch_half_hourly_production(
         )
     df["t"] = pd.to_datetime(df["date"], utc=False)
     out = df[["value", "t"]].set_index("t").rename(columns={"value": "production_wh"})
-    out = out.tz_localize(TIMEZONE)
+    out = out.tz_localize(TIMEZONE, ambiguous="infer")
     return out
 
 
