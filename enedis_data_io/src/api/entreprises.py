@@ -17,7 +17,7 @@ from datetime import date, datetime, timedelta
 
 import pandas as pd
 
-from enedis_data_io.src.api import WEB_SESSION
+from enedis_data_io.src.api import TIMEOUT_DEFAULT, WEB_SESSION
 from enedis_data_io.src.api.config import SETTINGS
 from enedis_data_io.src.types_helpers import DATE_INPUT
 
@@ -47,6 +47,7 @@ def fetch_token(
             "client_id": client_id,
             "client_secret": client_secret,
         },
+        timeout=TIMEOUT_DEFAULT,
     )
     r.raise_for_status()
     token = r.json()
@@ -76,6 +77,7 @@ def fetch_meter_address(token: str, prm: str) -> MeterAddress:
             "Accept": "application/json",
             "Content-Type": "application/json",
         },
+        timeout=TIMEOUT_DEFAULT,
     )
     r.raise_for_status()
     x = r.json().get("address")
@@ -101,6 +103,7 @@ def fetch_meter_overview(token: str) -> list[str]:
             "Accept": "application/json",
             "Content-Type": "application/json;charset=UTF-8",
         },
+        timeout=TIMEOUT_DEFAULT,
     )
     r.raise_for_status()
     x = r.json()
@@ -159,6 +162,7 @@ def fetch_daily_production(
         url=f"{BASE_URL}/mesures/v1/metering_data/daily_production",
         params=dict(usage_point_id=prm, start=start, end=end),
         headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
+        timeout=TIMEOUT_DEFAULT,
     )
     r.raise_for_status()
     x = r.json()
@@ -189,6 +193,7 @@ def fetch_daily_consumption(
         url=f"{BASE_URL}/mesures/v1/metering_data/daily_consumption",
         params=dict(usage_point_id=prm, start=start, end=end),
         headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
+        timeout=TIMEOUT_DEFAULT,
     )
     r.raise_for_status()
     x = r.json()
@@ -224,6 +229,7 @@ def fetch_half_hourly_production(
         url=f"{BASE_URL}/mesures/v1/metering_data/production_load_curve",
         params=dict(usage_point_id=prm, start=start, end=end),
         headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
+        timeout=TIMEOUT_DEFAULT,
     )
     r.raise_for_status()
     x = r.json()
