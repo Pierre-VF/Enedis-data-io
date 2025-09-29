@@ -18,6 +18,7 @@ from datetime import date, datetime, timedelta
 import pandas as pd
 
 from enedis_data_io.src.api import WEB_SESSION
+from enedis_data_io.src.api.config import SETTINGS
 from enedis_data_io.src.types_helpers import DATE_INPUT
 
 BASE_URL = "https://ext.prod.api.enedis.fr:443"
@@ -123,17 +124,26 @@ def _f_date(x: DATE_INPUT) -> date:
         raise TypeError()
 
 
-def _parse_start_end_as_dates(start: DATE_INPUT, end: DATE_INPUT) -> tuple[date, date]:
+def _parse_start_end_as_dates(
+    start: DATE_INPUT,
+    end: DATE_INPUT,
+) -> tuple[date, date]:
     return _f_date(start), _f_date(end)
 
 
-def _parse_start_end_as_str(start: DATE_INPUT, end: DATE_INPUT) -> tuple[str, str]:
+def _parse_start_end_as_str(
+    start: DATE_INPUT,
+    end: DATE_INPUT,
+) -> tuple[str, str]:
     x1, x2 = _parse_start_end_as_dates(start, end)
     return str(x1), str(x2)
 
 
 def fetch_daily_production(
-    token: str, prm: str, start: DATE_INPUT, end: DATE_INPUT
+    token: str,
+    prm: str,
+    start: DATE_INPUT,
+    end: DATE_INPUT,
 ) -> pd.DataFrame:
     """
     Télécharge les données de production journalière (en Wh) sur une période donnée.
@@ -160,7 +170,10 @@ def fetch_daily_production(
 
 
 def fetch_daily_consumption(
-    token: str, prm: str, start: DATE_INPUT, end: DATE_INPUT
+    token: str,
+    prm: str,
+    start: DATE_INPUT,
+    end: DATE_INPUT,
 ) -> pd.DataFrame:
     """
     Télécharge les données de consommation journalière (en Wh) sur une période donnée.
@@ -187,7 +200,10 @@ def fetch_daily_consumption(
 
 
 def fetch_half_hourly_production(
-    token: str, prm: str, start: DATE_INPUT, end: DATE_INPUT
+    token: str,
+    prm: str,
+    start: DATE_INPUT,
+    end: DATE_INPUT,
 ) -> pd.DataFrame:
     """
     Télécharge les données de production à la demi-heure (en Wh) sur une période donnée.
@@ -232,7 +248,15 @@ def fetch_half_hourly_production(
 
 
 class ApiManager:
-    def __init__(self, client_id: str, client_secret: str) -> None:
+    def __init__(
+        self,
+        client_id: str | None = None,
+        client_secret: str | None = None,
+    ) -> None:
+        if client_id is None:
+            client_id = SETTINGS.ENEDIS_API_USERNAME
+        if client_secret is None:
+            client_secret = SETTINGS.ENEDIS_API_PASSWORD
         self.__client_id = client_id
         self.__client_secret = client_secret
         self.__token: str | None = None

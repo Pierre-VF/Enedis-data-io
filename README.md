@@ -78,7 +78,7 @@ res = decrypt_file(file_path_in, key=key, output_file=file_path_out)
 
 ## Crédits et contributions
 
-Le code est gracieusement mis à disposition par la coopérative citoyenne de production d'énergie [Énergies partagées en Alsace](https://energies-partagees-alsace.coop/) et développé par 
+Le code est gracieusement mis à disposition par la coopérative citoyenne de production d'énergie [Énergies partagées en Alsace](https://energies-partagees-alsace.coop/) et développé par
 [PierreVF Consulting](https://www.pierrevf.consulting/).
 
 Toute contribution à la base de code est la bienvenue.
