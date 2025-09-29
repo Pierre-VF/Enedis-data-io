@@ -7,8 +7,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 
 # Automatic retries on failures and support of timeout
-TIMEOUT_DEFAULT = 10
-RETRIES_DEFAULT = 3
+TIMEOUT_DEFAULT = 2
+RETRIES_DEFAULT = 2
 
 
 WEB_SESSION = requests.Session()

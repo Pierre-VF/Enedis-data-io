@@ -17,7 +17,9 @@ class ApiEntreprises:
     Classe d'interface vers les fonctionalités entreprise
     """
 
-    def __init__(self, client_id: str, client_secret: str) -> None:
+    def __init__(
+        self, client_id: str | None = None, client_secret: str | None = None
+    ) -> None:
         self.__api_manager = _ApiManager(
             client_id=client_id, client_secret=client_secret
         )
@@ -29,22 +31,35 @@ class ApiEntreprises:
         return self.__api_manager.meter_address(prm=prm)
 
     def consommation_journaliere(
-        self, prm: str, start: DATE_INPUT, end: DATE_INPUT
+        self,
+        prm: str,
+        start: DATE_INPUT,
+        end: DATE_INPUT,
     ) -> pd.DataFrame:
         return self.__api_manager.daily_consumption(prm=prm, start=start, end=end)
 
     def production_journaliere(
-        self, prm: str, start: DATE_INPUT, end: DATE_INPUT
+        self,
+        prm: str,
+        start: DATE_INPUT,
+        end: DATE_INPUT,
     ) -> pd.DataFrame:
         return self.__api_manager.daily_production(prm=prm, start=start, end=end)
 
     def production_par_demi_heure(
-        self, prm: str, start: DATE_INPUT, end: DATE_INPUT
+        self,
+        prm: str,
+        start: DATE_INPUT,
+        end: DATE_INPUT,
     ) -> pd.DataFrame:
         return self.__api_manager.half_hourly_production(prm=prm, start=start, end=end)
 
 
-def decrypte_fichier(fichier_encrypte: str, cle: str, fichier_decrypte: str) -> str:
+def decrypte_fichier(
+    fichier_encrypte: str,
+    cle: str,
+    fichier_decrypte: str,
+) -> str:
     return __decrypt_file(
         file_path=fichier_encrypte, key=cle, output_file=fichier_decrypte
     )
