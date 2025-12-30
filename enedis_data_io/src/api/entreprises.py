@@ -21,7 +21,7 @@ from enedis_data_io.src.api import TIMEOUT_DEFAULT, WEB_SESSION
 from enedis_data_io.src.api.config import SETTINGS
 from enedis_data_io.src.types_helpers import DATE_INPUT
 
-BASE_URL = "https://ext.prod.api.enedis.fr:443"
+BASE_URL = "https://gw.ext.prod.api.enedis.fr:443"
 TIMEZONE = "Europe/Paris"
 
 
@@ -142,6 +142,13 @@ def _parse_start_end_as_str(
     return str(x1), str(x2)
 
 
+def _raise_for_status_with_hints(r) -> None:
+    try:
+        r.raise_for_status()
+    except Exception as e:
+        raise RuntimeError(r.text) from e
+
+
 def fetch_daily_production(
     token: str,
     prm: str,
@@ -159,12 +166,12 @@ def fetch_daily_production(
     """
     start, end = _parse_start_end_as_str(start, end)
     r = WEB_SESSION.get(
-        url=f"{BASE_URL}/mesures/v1/metering_data/daily_production",
+        url=f"{BASE_URL}/mesures/v2/metering_data/daily_production",
         params=dict(usage_point_id=prm, start=start, end=end),
         headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
         timeout=TIMEOUT_DEFAULT,
     )
-    r.raise_for_status()
+    _raise_for_status_with_hints(r)
     x = r.json()
     df = pd.DataFrame(x["meter_reading"]["interval_reading"])
     df["t"] = pd.to_datetime(df["date"], utc=False)
@@ -190,12 +197,12 @@ def fetch_daily_consumption(
     """
     start, end = _parse_start_end_as_str(start, end)
     r = WEB_SESSION.get(
-        url=f"{BASE_URL}/mesures/v1/metering_data/daily_consumption",
+        url=f"{BASE_URL}/mesures/v2/metering_data/daily_consumption",
         params=dict(usage_point_id=prm, start=start, end=end),
         headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
         timeout=TIMEOUT_DEFAULT,
     )
-    r.raise_for_status()
+    _raise_for_status_with_hints(r)
     x = r.json()
     df = pd.DataFrame(x["meter_reading"]["interval_reading"])
     df["t"] = pd.to_datetime(df["date"], utc=False)
@@ -226,12 +233,12 @@ def fetch_half_hourly_production(
     if t_end > t_start + timedelta(days=7):
         raise ValueError("There must be less than 7 days between start and end")
     r = WEB_SESSION.get(
-        url=f"{BASE_URL}/mesures/v1/metering_data/production_load_curve",
+        url=f"{BASE_URL}/mesures/v2/metering_data/production_load_curve",
         params=dict(usage_point_id=prm, start=start, end=end),
         headers={"Authorization": f"Bearer {token}", "Accept": "application/json"},
         timeout=TIMEOUT_DEFAULT,
     )
-    r.raise_for_status()
+    _raise_for_status_with_hints(r)
     x = r.json()
     df = pd.DataFrame(x["meter_reading"]["interval_reading"])
 
@@ -266,7 +273,7 @@ class ApiManager:
         self.__client_id = client_id
         self.__client_secret = client_secret
         self.__token: str | None = None
-        self.__token_expiry: str | None = None
+        self.__token_expiry: datetime | None = None
 
     @property
     def token(self) -> str:
