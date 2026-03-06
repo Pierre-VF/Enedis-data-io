@@ -252,7 +252,9 @@ def fetch_half_hourly_production(
             lambda x: float(x[0]) + float(x[1]) + float(x[2])
         )
     df["t"] = pd.to_datetime(df["date"], utc=False)
-    out = df[["value", "t"]].set_index("t").rename(columns={"value": "production_wh"})
+    # Les données en sortie sont une puissance moyenne sur l'intervale 
+    out = df[["value", "t"]].set_index("t").rename(columns={"value": "production_w"}).resample("30min").mean()
+    out["production_wh"] = out["production_w"] / 2 # Conversion Wh / W sur 30 minutes
     out = out.tz_localize(TIMEZONE, ambiguous="infer")
     return out
 
