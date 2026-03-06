@@ -175,7 +175,12 @@ def fetch_daily_production(
     x = r.json()
     df = pd.DataFrame(x["meter_reading"]["interval_reading"])
     df["t"] = pd.to_datetime(df["date"], utc=False)
-    out = df[["value", "t"]].set_index("t").rename(columns={"value": "production_wh"})
+    out = (
+        df[["value", "t"]]
+        .set_index("t")
+        .rename(columns={"value": "production_wh"})
+        .astype(float)
+    )
     out = out.tz_localize(TIMEZONE)
     return out
 
@@ -206,7 +211,12 @@ def fetch_daily_consumption(
     x = r.json()
     df = pd.DataFrame(x["meter_reading"]["interval_reading"])
     df["t"] = pd.to_datetime(df["date"], utc=False)
-    out = df[["value", "t"]].set_index("t").rename(columns={"value": "consumption_wh"})
+    out = (
+        df[["value", "t"]]
+        .set_index("t")
+        .rename(columns={"value": "consumption_wh"})
+        .astype(float)
+    )
     out = out.tz_localize(TIMEZONE)
     return out
 
@@ -252,9 +262,16 @@ def fetch_half_hourly_production(
             lambda x: float(x[0]) + float(x[1]) + float(x[2])
         )
     df["t"] = pd.to_datetime(df["date"], utc=False)
-    # Les données en sortie sont une puissance moyenne sur l'intervale 
-    out = df[["value", "t"]].set_index("t").rename(columns={"value": "production_w"}).resample("30min").mean()
-    out["production_wh"] = out["production_w"] / 2 # Conversion Wh / W sur 30 minutes
+    # Les données en sortie sont une puissance moyenne sur l'intervale
+    out = (
+        df[["value", "t"]]
+        .set_index("t")
+        .rename(columns={"value": "production_w"})
+        .astype(float)
+        .resample("30min")
+        .mean()
+    )
+    out["production_wh"] = out["production_w"] / 2  # Conversion Wh / W sur 30 minutes
     out = out.tz_localize(TIMEZONE, ambiguous="infer")
     return out
 
